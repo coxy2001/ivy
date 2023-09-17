@@ -126,33 +126,44 @@ class ObjectCounter():
         font = cv2.FONT_HERSHEY_DUPLEX
         line_type = cv2.LINE_AA
 
+        colors = {
+            'car': (255, 0, 0),
+            'truck': (0, 0, 255),
+        }
+
+        hud_color = (0, 255, 0)
         # draw and label blob bounding boxes
         for _id, blob in self.blobs.items():
             (x, y, w, h) = [int(v) for v in blob.bounding_box]
-            cv2.rectangle(frame, (x, y), (x + w, y + h), self.hud_color, 2)
-            object_label = 'I: ' + _id[:8] \
-                            if blob.type is None \
-                            else 'I: {0}, T: {1} ({2})'.format(_id[:8], blob.type, str(blob.type_confidence)[:4])
-            cv2.putText(frame, object_label, (x, y - 5), font, 1, self.hud_color, 2, line_type)
+            color = hud_color if blob.type is None else colors.get(blob.type, hud_color)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+            object_label = (
+                'I: ' + _id[:8]
+                # if blob.type is None
+                # else 'T: {0} ({1})'.format(blob.type, str(blob.type_confidence)[:4])
+            )
+            cv2.putText(frame, object_label, (x, y - 5), font, 1, color, 2, line_type)
 
         # draw counting lines
+        hud_color = (0, 0, 255)
         for counting_line in self.counting_lines:
-            cv2.line(frame, counting_line['line'][0], counting_line['line'][1], self.hud_color, 3)
+            cv2.line(frame, counting_line['line'][0], counting_line['line'][1], hud_color, 3)
             cl_label_origin = (counting_line['line'][0][0], counting_line['line'][0][1] + 35)
-            cv2.putText(frame, counting_line['label'], cl_label_origin, font, 1, self.hud_color, 2, line_type)
+            cv2.putText(frame, counting_line['label'], cl_label_origin, font, 1, hud_color, 2, line_type)
 
         # show detection roi
         if self.show_droi:
             frame = draw_roi(frame, self.droi)
 
         # show counts
+        hud_color = (255, 0, 0)
         if self.show_counts:
             offset = 1
             for line, objects in self.counts.items():
-                cv2.putText(frame, line, (10, 40 * offset), font, 1, self.hud_color, 2, line_type)
+                cv2.putText(frame, line, (10, 40 * offset), font, 1, hud_color, 2, line_type)
                 for label, count in objects.items():
                     offset += 1
-                    cv2.putText(frame, "{}: {}".format(label, count), (10, 40 * offset), font, 1, self.hud_color, 2, line_type)
+                    cv2.putText(frame, "{}: {}".format(label, count), (10, 40 * offset), font, 1, hud_color, 2, line_type)
                 offset += 2
 
         return frame
