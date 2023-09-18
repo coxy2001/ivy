@@ -1,31 +1,32 @@
-'''
+"""
 Perform object detection using models created with the YOLO (You Only Look Once) neural net.
 https://pjreddie.com/darknet/yolo/
-'''
-
-# pylint: disable=no-member,invalid-name
+"""
 
 import cv2
 import numpy as np
 import settings
 
 
-with open(settings.YOLO_CLASSES_PATH, 'r') as classes_file:
+with open(settings.YOLO_CLASSES_PATH, "r") as classes_file:
     CLASSES = dict(enumerate([line.strip() for line in classes_file.readlines()]))
-with open(settings.YOLO_CLASSES_OF_INTEREST_PATH, 'r') as coi_file:
+with open(settings.YOLO_CLASSES_OF_INTEREST_PATH, "r") as coi_file:
     CLASSES_OF_INTEREST = tuple([line.strip() for line in coi_file.readlines()])
 conf_threshold = settings.YOLO_CONFIDENCE_THRESHOLD
 net = cv2.dnn.readNet(settings.YOLO_WEIGHTS_PATH, settings.YOLO_CONFIG_PATH)
 
+
 def get_bounding_boxes(image):
-    '''
+    """
     Return a list of bounding boxes of objects detected,
     their classes and the confidences of the detections made.
-    '''
+    """
 
     # create image blob
     scale = 0.00392
-    image_blob = cv2.dnn.blobFromImage(image, scale, (416, 416), (0, 0, 0), True, crop=False)
+    image_blob = cv2.dnn.blobFromImage(
+        image, scale, (416, 416), (0, 0, 0), True, crop=False
+    )
 
     # detect objects
     net.setInput(image_blob)

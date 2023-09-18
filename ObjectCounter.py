@@ -9,7 +9,7 @@ import cv2
 from joblib import Parallel, delayed
 
 from tracker import add_new_blobs, remove_duplicates, update_blob_tracker
-from detectors.detector import get_bounding_boxes
+from detectors import get_bounding_boxes
 from util.detection_roi import get_roi_frame, draw_roi
 from util.logger import get_logger
 from counter import attempt_count
@@ -18,8 +18,7 @@ logger = get_logger()
 NUM_CORES = multiprocessing.cpu_count()
 
 class ObjectCounter():
-
-    def __init__(self, initial_frame, detector, tracker, droi, show_droi, mcdf, mctf, di, counting_lines, show_counts, hud_color):
+    def __init__(self, initial_frame, detector, tracker, droi, show_droi, mcdf, mctf, di, counting_lines, show_counts):
         self.frame = initial_frame # current frame of video
         self.detector = detector
         self.tracker = tracker
@@ -34,7 +33,6 @@ class ObjectCounter():
         self.frame_count = 0 # number of frames since last detection
         self.counts = {counting_line['label']: {} for counting_line in counting_lines} # counts of objects by type for each counting line
         self.show_counts = show_counts
-        self.hud_color = hud_color
 
         # create blobs from initial frame
         droi_frame = get_roi_frame(self.frame, self.droi)
@@ -140,7 +138,7 @@ class ObjectCounter():
             object_label = (
                 'I: ' + _id[:8]
                 # if blob.type is None
-                # else 'T: {0} ({1})'.format(blob.type, str(blob.type_confidence)[:4])
+                # else f'T: {blob.type} ({blob.type_confidence:.2f})'
             )
             cv2.putText(frame, object_label, (x, y - 5), font, 1, color, 2, line_type)
 
@@ -163,7 +161,7 @@ class ObjectCounter():
                 cv2.putText(frame, line, (10, 40 * offset), font, 1, hud_color, 2, line_type)
                 for label, count in objects.items():
                     offset += 1
-                    cv2.putText(frame, "{}: {}".format(label, count), (10, 40 * offset), font, 1, hud_color, 2, line_type)
+                    cv2.putText(frame, f"{label}: {count}", (10, 40 * offset), font, 1, hud_color, 2, line_type)
                 offset += 2
 
         return frame
