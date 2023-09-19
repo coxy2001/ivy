@@ -31,7 +31,7 @@ def get_bounding_boxes(image):
     # detect objects
     net.setInput(image_blob)
     layer_names = net.getLayerNames()
-    output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+    output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
     outputs = net.forward(output_layers)
 
     classes = []
@@ -64,7 +64,6 @@ def get_bounding_boxes(image):
     _classes = []
     _confidences = []
     for i in indices:
-        i = i[0]
         _bounding_boxes.append(boxes[i])
         _classes.append(classes[i])
         _confidences.append(confidences[i])

@@ -145,18 +145,16 @@ if DETECTOR == 'yolo':
 
 # Configs for YOLO (You Only Look Once) detector
 if DETECTOR == 'yolov8':
-    if os.getenv('YOLOV8_WEIGHTS_PATH') and \
-            os.getenv('YOLOV8_CONFIG_PATH') and \
+    if os.getenv('YOLOV8_MODEL_PATH') and \
             os.getenv('YOLOV8_CLASSES_PATH') and \
             os.getenv('YOLOV8_CLASSES_OF_INTEREST_PATH') and \
             os.getenv('YOLOV8_CONFIDENCE_THRESHOLD'):
-        YOLOV8_WEIGHTS_PATH = os.getenv('YOLOV8_WEIGHTS_PATH')
-        YOLOV8_CONFIG_PATH = os.getenv('YOLOV8_CONFIG_PATH')
+        YOLOV8_MODEL_PATH = os.getenv('YOLOV8_MODEL_PATH')
         YOLOV8_CLASSES_PATH = os.getenv('YOLOV8_CLASSES_PATH')
         YOLOV8_CLASSES_OF_INTEREST_PATH = os.getenv('YOLOV8_CLASSES_OF_INTEREST_PATH')
         YOLOV8_CONFIDENCE_THRESHOLD = float(os.getenv('YOLOV8_CONFIDENCE_THRESHOLD'))
     else:
-        print('YOLOV8_WEIGHTS_PATH, YOLOV8_CONFIG_PATH, YOLOV8_CLASSES_PATH, YOLOV8_CLASSES_OF_INTEREST_PATH, ' +
+        print('YOLOV8_MODEL_PATH, YOLOV8_CLASSES_PATH, YOLOV8_CLASSES_OF_INTEREST_PATH, ' +
               'and/or YOLOV8_CONFIDENCE_THRESHOLD not set or invalid.')
         ENVS_READY = False
 

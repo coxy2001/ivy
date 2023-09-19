@@ -17,6 +17,8 @@ def get_bounding_boxes(frame, model):
     """
     if model == "yolo":
         from detectors.yolo import get_bounding_boxes as detector
+    elif model == "yolov8":
+        from detectors.yolov8 import get_bounding_boxes as detector
     else:
         logger.error(
             "Invalid detector model, algorithm or API specified (options: yolo, yolov8)",
