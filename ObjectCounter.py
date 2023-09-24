@@ -137,8 +137,8 @@ class ObjectCounter():
             cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
             object_label = (
                 'I: ' + _id[:8]
-                # if blob.type is None
-                # else f'T: {blob.type} ({blob.type_confidence:.2f})'
+                if blob.type is None
+                else f'T: {blob.type} ({blob.type_confidence:.2f})'
             )
             cv2.putText(frame, object_label, (x, y - 5), font, 1, color, 2, line_type)
 

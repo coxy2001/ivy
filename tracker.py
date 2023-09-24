@@ -6,7 +6,6 @@ import sys
 import cv2
 import settings
 from util.blob import Blob
-from util.bounding_box import get_overlap, get_box_image
 from util.image import get_base64_image
 from util.object_info import generate_object_id
 from util.logger import get_logger
@@ -67,7 +66,7 @@ def add_new_blobs(boxes, classes, confidences, blobs, frame, tracker, mcdf):
 
         match_found = False
         for _id, blob in blobs.items():
-            if get_overlap(box, blob.bounding_box) >= 0.6:
+            if blob.get_overlap(box) >= 0.6:
                 match_found = True
                 if _id not in matched_blob_ids:
                     blob.num_consecutive_detection_failures = 0
@@ -82,7 +81,7 @@ def add_new_blobs(boxes, classes, confidences, blobs, frame, tracker, mcdf):
                     'type_confidence': blob.type_confidence,
                 }
                 if settings.LOG_IMAGES:
-                    blob_update_log_meta['image'] = get_base64_image(get_box_image(frame, blob.bounding_box))
+                    blob_update_log_meta['image'] = get_base64_image(blob.get_box_image(frame))
                 logger.debug('Blob updated.', extra={'meta': blob_update_log_meta})
                 break
 
@@ -99,7 +98,7 @@ def add_new_blobs(boxes, classes, confidences, blobs, frame, tracker, mcdf):
                 'type_confidence': _blob.type_confidence,
             }
             if settings.LOG_IMAGES:
-                blog_create_log_meta['image'] = get_base64_image(get_box_image(frame, _blob.bounding_box))
+                blog_create_log_meta['image'] = get_base64_image(_blob.get_box_image(frame))
             logger.debug('Blob created.', extra={'meta': blog_create_log_meta})
 
     blobs = _remove_stray_blobs(blobs, matched_blob_ids, mcdf)
@@ -114,7 +113,7 @@ def remove_duplicates(blobs):
             if blob_a == blob_b:
                 break
 
-            if get_overlap(blob_a.bounding_box, blob_b.bounding_box) >= 0.6 and blob_id in blobs:
+            if blob_a.get_overlap(blob_b.bounding_box) >= 0.6 and blob_id in blobs:
                 del blobs[blob_id]
     return blobs
 

@@ -5,3 +5,4 @@ data/*
 .env
 .coverage
 .venv
+ffmpeg.exe

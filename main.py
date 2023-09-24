@@ -66,10 +66,12 @@ def run():
     record = settings.RECORD
     if record:
         # initialize video object to record counting
-        output_video = cv2.VideoWriter(settings.OUTPUT_VIDEO_PATH, \
-                                        cv2.VideoWriter_fourcc(*'MJPG'), \
-                                        30, \
-                                        (f_width, f_height))
+        output_video = cv2.VideoWriter(
+            settings.OUTPUT_VIDEO_PATH,
+            cv2.VideoWriter_fourcc(*"mp4v"),
+            30,
+            (f_width, f_height),
+        )
 
     logger.info('Processing started.', extra={
         'meta': {

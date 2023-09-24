@@ -2,9 +2,8 @@
 Detectors entry point.
 """
 
-# pylint: disable=import-outside-toplevel
-
 import sys
+
 from util.logger import get_logger
 
 
