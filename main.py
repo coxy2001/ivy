@@ -1,17 +1,18 @@
-'''
+"""
 VCS entry point.
-'''
+"""
 
-# pylint: disable=wrong-import-position
+from dotenv import load_dotenv
 
+load_dotenv()
+
+import settings
 import sys
 import time
 import cv2
 
-from dotenv import load_dotenv
-load_dotenv()
-
-import settings
+from detectors.yolo import DarknetYOLODetector
+from detectors.yolov8 import UltralyticsYOLODetector
 from util.logger import init_logger
 from util.image import take_screenshot
 from util.logger import get_logger
@@ -23,9 +24,9 @@ logger = get_logger()
 
 
 def run():
-    '''
+    """
     Initialize object counter class and run counting loop.
-    '''
+    """
 
     video = settings.VIDEO
     wfc = settings.WAIT_FOR_CAPTURE
@@ -34,9 +35,13 @@ def run():
     wait_for_seconds = 10
     cap = cv2.VideoCapture(video)
     while not cap.isOpened():
-        logger.error('Invalid video source %s', video, extra={
-            'meta': {'label': 'INVALID_VIDEO_SOURCE'},
-        })
+        logger.error(
+            "Invalid video source %s",
+            video,
+            extra={
+                "meta": {"label": "INVALID_VIDEO_SOURCE"},
+            },
+        )
         if wfc and waited_to_capture_for_seconds < wfc_timeout:
             # wait and then try to capture again
             time.sleep(wait_for_seconds)
@@ -49,19 +54,56 @@ def run():
     detection_interval = settings.DI
     mcdf = settings.MCDF
     mctf = settings.MCTF
-    detector = settings.DETECTOR
     tracker = settings.TRACKER
     use_droi = settings.USE_DROI
     # create detection region of interest polygon
-    droi = settings.DROI \
-            if use_droi \
-            else [(0, 0), (f_width, 0), (f_width, f_height), (0, f_height)]
+    droi = (
+        settings.DROI
+        if use_droi
+        else [(0, 0), (f_width, 0), (f_width, f_height), (0, f_height)]
+    )
     show_droi = settings.SHOW_DROI
     counting_lines = settings.COUNTING_LINES
     show_counts = settings.SHOW_COUNTS
 
-    object_counter = ObjectCounter(frame, detector, tracker, droi, show_droi, mcdf, mctf,
-                                   detection_interval, counting_lines, show_counts)
+    with open(settings.CLASSES_PATH, "r") as classes_file:
+        classes = [line.strip() for line in classes_file.readlines()]
+    with open(settings.CLASSES_OF_INTEREST_PATH, "r") as coi_file:
+        classes_of_interest = [line.strip() for line in coi_file.readlines()]
+
+    if settings.DETECTOR == "yolo":
+        detector = DarknetYOLODetector(
+            settings.YOLO_WEIGHTS_PATH,
+            settings.YOLO_CONFIG_PATH,
+            settings.CONFIDENCE_THRESHOLD,
+            classes,
+            classes_of_interest,
+        )
+    elif settings.DETECTOR == "yolov8":
+        detector = UltralyticsYOLODetector(
+            settings.YOLOV8_MODEL_PATH,
+            settings.CONFIDENCE_THRESHOLD,
+            classes_of_interest,
+        )
+    else:
+        logger.error(
+            "Invalid detector model, algorithm or API specified (options: yolo, yolov8)",
+            extra={"meta": {"label": "INVALID_DETECTION_ALGORITHM"}},
+        )
+        sys.exit()
+
+    object_counter = ObjectCounter(
+        frame,
+        detector,
+        tracker,
+        droi,
+        show_droi,
+        mcdf,
+        mctf,
+        detection_interval,
+        counting_lines,
+        show_counts,
+    )
 
     record = settings.RECORD
     if record:
@@ -73,27 +115,32 @@ def run():
             (f_width, f_height),
         )
 
-    logger.info('Processing started.', extra={
-        'meta': {
-            'label': 'START_PROCESS',
-            'counter_config': {
-                'di': detection_interval,
-                'mcdf': mcdf,
-                'mctf': mctf,
-                'detector': detector,
-                'tracker': tracker,
-                'use_droi': use_droi,
-                'droi': droi,
-                'counting_lines': counting_lines
+    logger.info(
+        "Processing started.",
+        extra={
+            "meta": {
+                "label": "START_PROCESS",
+                "counter_config": {
+                    "di": detection_interval,
+                    "mcdf": mcdf,
+                    "mctf": mctf,
+                    "detector": detector,
+                    "tracker": tracker,
+                    "use_droi": use_droi,
+                    "droi": droi,
+                    "counting_lines": counting_lines,
+                },
             },
         },
-    })
+    )
 
     headless = settings.HEADLESS
     if not headless:
         # capture mouse events in the debug window
-        cv2.namedWindow('Debug')
-        cv2.setMouseCallback('Debug', mouse_callback, {'frame_width': f_width, 'frame_height': f_height})
+        cv2.namedWindow("Debug")
+        cv2.setMouseCallback(
+            "Debug", mouse_callback, {"frame_width": f_width, "frame_height": f_height}
+        )
 
     is_paused = False
     output_frame = None
@@ -103,20 +150,27 @@ def run():
         # main loop
         while retval:
             k = cv2.waitKey(1) & 0xFF
-            if k == ord('p'): # pause/play loop if 'p' key is pressed
+            if k == ord("p"):  # pause/play loop if 'p' key is pressed
                 is_paused = False if is_paused else True
-                logger.info('Loop paused/played.', extra={'meta': {'label': 'PAUSE_PLAY_LOOP', 'is_paused': is_paused}})
-            if k == ord('s') and output_frame is not None: # save frame if 's' key is pressed
+                logger.info(
+                    "Loop paused/played.",
+                    extra={
+                        "meta": {"label": "PAUSE_PLAY_LOOP", "is_paused": is_paused}
+                    },
+                )
+            if (
+                k == ord("s") and output_frame is not None
+            ):  # save frame if 's' key is pressed
                 take_screenshot(output_frame)
-            if k == ord('q'): # end video loop if 'q' key is pressed
-                logger.info('Loop stopped.', extra={'meta': {'label': 'STOP_LOOP'}})
+            if k == ord("q"):  # end video loop if 'q' key is pressed
+                logger.info("Loop stopped.", extra={"meta": {"label": "STOP_LOOP"}})
                 break
 
             if is_paused:
                 time.sleep(0.5)
                 continue
 
-            _timer = cv2.getTickCount() # set timer to calculate processing frame rate
+            _timer = cv2.getTickCount()  # set timer to calculate processing frame rate
 
             object_counter.count(frame)
             output_frame = object_counter.visualize()
@@ -127,27 +181,34 @@ def run():
             if not headless:
                 debug_window_size = settings.DEBUG_WINDOW_SIZE
                 resized_frame = cv2.resize(output_frame, debug_window_size)
-                cv2.imshow('Debug', resized_frame)
+                cv2.imshow("Debug", resized_frame)
 
             frames_count = round(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            processing_frame_rate = round(cv2.getTickFrequency() / (cv2.getTickCount() - _timer), 2)
+            processing_frame_rate = round(
+                cv2.getTickFrequency() / (cv2.getTickCount() - _timer), 2
+            )
             frames_processed += 1
             blobs = object_counter.get_blobs()
-            logger.debug('Frame processed.', extra={
-                'meta': {
-                    'label': 'FRAME_PROCESS',
-                    'frames_count': frames_count,
-                    'frames_processed': frames_processed,
-                    'video_frame_rate': round(cap.get(cv2.CAP_PROP_FPS), 2),
-                    'video_frame_size': {'width': f_width, 'height': f_height},
-                    'processing_frame_rate': processing_frame_rate,
-                    'percentage_processed': round((frames_processed / frames_count) * 100, 2),
-                    'time_in_seconds': round(cap.get(cv2.CAP_PROP_POS_MSEC) / 1000),
-                    'blobs': blobs,
-                    'blobs_count': len(blobs),
-                    'counts': object_counter.get_counts(),
+            logger.debug(
+                "Frame processed.",
+                extra={
+                    "meta": {
+                        "label": "FRAME_PROCESS",
+                        "frames_count": frames_count,
+                        "frames_processed": frames_processed,
+                        "video_frame_rate": round(cap.get(cv2.CAP_PROP_FPS), 2),
+                        "video_frame_size": {"width": f_width, "height": f_height},
+                        "processing_frame_rate": processing_frame_rate,
+                        "percentage_processed": round(
+                            (frames_processed / frames_count) * 100, 2
+                        ),
+                        "time_in_seconds": round(cap.get(cv2.CAP_PROP_POS_MSEC) / 1000),
+                        "blobs": blobs,
+                        "blobs_count": len(blobs),
+                        "counts": object_counter.get_counts(),
+                    },
                 },
-            })
+            )
 
             retval, frame = cap.read()
     finally:
@@ -158,14 +219,17 @@ def run():
             cv2.destroyAllWindows()
         if record:
             output_video.release()
-        logger.info('Processing ended.', extra={
-            'meta': {
-                'label': 'END_PROCESS',
-                'counts': object_counter.get_counts(),
-                'completed': frames_count - frames_processed == 0,
+        logger.info(
+            "Processing ended.",
+            extra={
+                "meta": {
+                    "label": "END_PROCESS",
+                    "counts": object_counter.get_counts(),
+                    "completed": frames_count - frames_processed == 0,
+                },
             },
-        })
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

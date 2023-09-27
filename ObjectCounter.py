@@ -9,7 +9,6 @@ import cv2
 from joblib import Parallel, delayed
 
 from tracker import add_new_blobs, remove_duplicates, update_blob_tracker
-from detectors import get_bounding_boxes
 from util.detection_roi import get_roi_frame, draw_roi
 from util.logger import get_logger
 from counter import attempt_count
@@ -36,7 +35,7 @@ class ObjectCounter():
 
         # create blobs from initial frame
         droi_frame = get_roi_frame(self.frame, self.droi)
-        _bounding_boxes, _classes, _confidences = get_bounding_boxes(droi_frame, self.detector)
+        _bounding_boxes, _classes, _confidences = self.detector.get_bounding_boxes(droi_frame)
         self.blobs = add_new_blobs(_bounding_boxes, _classes, _confidences, self.blobs, self.frame, self.tracker, self.mcdf)
 
     def get_counts(self):
@@ -111,7 +110,7 @@ class ObjectCounter():
         if self.frame_count >= self.detection_interval:
             # rerun detection
             droi_frame = get_roi_frame(self.frame, self.droi)
-            _bounding_boxes, _classes, _confidences = get_bounding_boxes(droi_frame, self.detector)
+            _bounding_boxes, _classes, _confidences = self.detector.get_bounding_boxes(droi_frame)
 
             self.blobs = add_new_blobs(_bounding_boxes, _classes, _confidences, self.blobs, self.frame, self.tracker, self.mcdf)
             self.blobs = remove_duplicates(self.blobs)
