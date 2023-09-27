@@ -1,7 +1,6 @@
-data/*
-!data/.gitkeep
+data/
 .vscode/
-*.pyc
+__pycache__/
 .env
 .coverage
 .venv

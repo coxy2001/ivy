@@ -124,7 +124,7 @@ def run():
                     "di": detection_interval,
                     "mcdf": mcdf,
                     "mctf": mctf,
-                    "detector": detector,
+                    "detector": settings.DETECTOR,
                     "tracker": tracker,
                     "use_droi": use_droi,
                     "droi": droi,
