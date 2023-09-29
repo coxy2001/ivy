@@ -1,3 +1,6 @@
+import uuid
+
+
 class Blob:
     """
     A blob represents a tracked object as it moves around in a video.
@@ -8,6 +11,7 @@ class Blob:
         self.type = _type
         self.type_confidence = _confidence
         self.tracker = _tracker
+        self.id = uuid.uuid4().hex
         self.centroid = self.get_centroid()
         self.area = self.get_area()
         self.num_consecutive_tracking_failures = 0

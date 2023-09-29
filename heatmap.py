@@ -85,8 +85,7 @@ def run():
     }
 
     blobs: list[Blob] = []
-    bounding_boxes, classes, confidences = detector.get_bounding_boxes(frame)
-    for box, type, confidence in zip(bounding_boxes, classes, confidences):
+    for box, type, confidence in zip(*detector.get_bounding_boxes(frame)):
         blob = Blob(box, type, confidence, None)
         blobs.append(blob)
         (x, y, w, h) = [int(v) for v in blob.bounding_box]
