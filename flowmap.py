@@ -106,10 +106,10 @@ def run():
 
             if frame_count == 0:
                 # Create blobs
-                for box, _type, _confidence in zip(*detector.get_bounding_boxes(frame)):
+                for box in detector.get_bounding_boxes(frame):
                     _tracker = cv2.TrackerKCF_create()
-                    _tracker.init(frame, tuple(box))
-                    blobs.append(Blob(box, _type, _confidence, _tracker))
+                    _tracker.init(frame, box.box)
+                    blobs.append(Blob(box.box, box.type, box.confidence, _tracker))
             else:
                 # Track blobs
                 for blob in blobs:
@@ -145,15 +145,15 @@ def run():
         # end capture, close window, close log file and video object if any
         cap.release()
 
-        for blob in blobs:
-            cv2.line(frame, blob.position_first_detected, blob.centroid, hud_color, 2)
-            cv2.circle(frame, blob.centroid, 5, hud_color, 5)
-
-        resized_frame = cv2.resize(frame, settings.DEBUG_WINDOW_SIZE)
-        cv2.imshow("Debug", resized_frame)
-        cv2.waitKey()
-
         if not settings.HEADLESS:
+            for blob in blobs:
+                cv2.line(
+                    frame, blob.position_first_detected, blob.centroid, hud_color, 2
+                )
+                cv2.circle(frame, blob.centroid, 5, hud_color, 5)
+            resized_frame = cv2.resize(frame, settings.DEBUG_WINDOW_SIZE)
+            cv2.imshow("Debug", resized_frame)
+            cv2.waitKey()
             cv2.destroyAllWindows()
 
 

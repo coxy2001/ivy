@@ -6,6 +6,8 @@ https://pjreddie.com/darknet/yolo/
 import cv2
 import numpy as np
 
+from . import BoundingBox
+
 
 class DarknetYOLODetector:
     def __init__(
@@ -21,7 +23,7 @@ class DarknetYOLODetector:
         self.classes = tuple(classes)
         self.classes_of_interest = tuple(classes_of_interest)
 
-    def get_bounding_boxes(self, image):
+    def get_bounding_boxes(self, image) -> list[BoundingBox]:
         """
         Return a list of bounding boxes of objects detected,
         their classes and the confidences of the detections made.
@@ -63,19 +65,15 @@ class DarknetYOLODetector:
                     y = int(center_y - h / 2)
                     classes.append(self.classes[class_id])
                     confidences.append(float(confidence))
-                    boxes.append([x, y, w, h])
+                    boxes.append((x, y, w, h))
 
         # remove overlapping bounding boxes
         indices = cv2.dnn.NMSBoxes(
             boxes, confidences, self.confidence_threshold, nms_threshold
         )
 
-        _bounding_boxes = []
-        _classes = []
-        _confidences = []
+        bounding_boxes = []
         for i in indices:
-            _bounding_boxes.append(boxes[i])
-            _classes.append(classes[i])
-            _confidences.append(confidences[i])
+            bounding_boxes.append(BoundingBox(boxes[i], classes[i], confidences[i]))
 
-        return _bounding_boxes, _classes, _confidences
+        return bounding_boxes

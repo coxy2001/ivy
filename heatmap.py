@@ -85,8 +85,8 @@ def run():
     }
 
     blobs: list[Blob] = []
-    for box, type, confidence in zip(*detector.get_bounding_boxes(frame)):
-        blob = Blob(box, type, confidence, None)
+    for box in detector.get_bounding_boxes(frame):
+        blob = Blob(box.box, box.type, box.confidence, None)
         blobs.append(blob)
         (x, y, w, h) = [int(v) for v in blob.bounding_box]
         color = hud_color if blob.type is None else colors.get(blob.type, hud_color)

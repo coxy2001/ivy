@@ -149,31 +149,34 @@ def run():
     try:
         # main loop
         while retval:
-            k = cv2.waitKey(1) & 0xFF
-            if k == ord("p"):  # pause/play loop if 'p' key is pressed
-                is_paused = False if is_paused else True
-                logger.info(
-                    "Loop paused/played.",
-                    extra={
-                        "meta": {"label": "PAUSE_PLAY_LOOP", "is_paused": is_paused}
-                    },
-                )
-            if (
-                k == ord("s") and output_frame is not None
-            ):  # save frame if 's' key is pressed
-                take_screenshot(output_frame)
-            if k == ord("q"):  # end video loop if 'q' key is pressed
-                logger.info("Loop stopped.", extra={"meta": {"label": "STOP_LOOP"}})
-                break
+            if not headless:
+                k = cv2.waitKey(1) & 0xFF
+                if k == ord("p"):  # pause/play loop if 'p' key is pressed
+                    is_paused = False if is_paused else True
+                    logger.info(
+                        "Loop paused/played.",
+                        extra={
+                            "meta": {"label": "PAUSE_PLAY_LOOP", "is_paused": is_paused}
+                        },
+                    )
+                if (
+                    k == ord("s") and output_frame is not None
+                ):  # save frame if 's' key is pressed
+                    take_screenshot(output_frame)
+                if k == ord("q"):  # end video loop if 'q' key is pressed
+                    logger.info("Loop stopped.", extra={"meta": {"label": "STOP_LOOP"}})
+                    break
 
-            if is_paused:
-                time.sleep(0.5)
-                continue
+                if is_paused:
+                    time.sleep(0.5)
+                    continue
 
             _timer = cv2.getTickCount()  # set timer to calculate processing frame rate
 
             object_counter.count(frame)
-            output_frame = object_counter.visualize()
+
+            if record or not headless:
+                output_frame = object_counter.visualize()
 
             if record:
                 output_video.write(output_frame)
