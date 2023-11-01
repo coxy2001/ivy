@@ -1,3 +1,4 @@
+import cv2
 import uuid
 
 
@@ -7,10 +8,10 @@ class Blob:
     """
 
     def __init__(self, _bounding_box, _type, _confidence, _tracker):
-        self.bounding_box = _bounding_box
+        self.bounding_box: tuple[int, int, int, int] = _bounding_box
         self.type = _type
         self.type_confidence = _confidence
-        self.tracker = _tracker
+        self.tracker: cv2.TrackerKCF = _tracker
         self.id = uuid.uuid4().hex
         self.centroid = self.get_centroid()
         self.area = self.get_area()
@@ -42,7 +43,7 @@ class Blob:
         print(counts)
         return max(counts, key=counts.get)
 
-    def box_contains_point(self, point):
+    def box_contains_point(self, point: tuple[int, int]):
         """
         Checks if a given point is within a bounding box.
         """
@@ -64,7 +65,7 @@ class Blob:
         x, y, w, h = self.bounding_box
         return round(x + (w / 2)), round(y + (h / 2))
 
-    def get_overlap(self, bbox2):
+    def get_overlap(self, bbox2: tuple[int, int, int, int]):
         """
         Calculates the degree of overlap of two bounding boxes.
         This can be any value from 0 to 1 where 0 means no overlap and 1 means complete overlap.
