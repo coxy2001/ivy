@@ -172,6 +172,10 @@ except ValueError:
 if ENABLE_FILE_LOGGER:
     LOG_FILES_DIRECTORY = os.getenv("LOG_FILES_DIRECTORY", "./data/logs/")
 
+VIDEO_INPUT_DIRECTORY = os.getenv("VIDEO_INPUT_DIRECTORY", "")
+VIDEO_OUTPUT_DIRECTORY = os.getenv("VIDEO_OUTPUT_DIRECTORY", "")
+DATA_OUTPUT_DIRECTORY = os.getenv("DATA_OUTPUT_DIRECTORY", "")
+
 # Log base 64 images
 # Logging images will increase the size of your logs significantly
 # However, if you intend to do some post-processing that involves images,

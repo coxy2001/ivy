@@ -1,18 +1,18 @@
-"""
-VCS entry point.
-"""
-
 from dotenv import load_dotenv
 
 load_dotenv()
 
 import cv2
-import time
+import json
+import os
 import settings
+import time
 
 from datetime import datetime
+from detectors import Detector
 from detectors.yolo import DarknetYOLODetector
 from detectors.yolov8 import UltralyticsYOLODetector
+from pathlib import Path
 from util.blob import Blob
 from util.debugger import mouse_callback
 from util.logger import init_logger, get_logger
@@ -61,12 +61,32 @@ def main():
     if not detector:
         return
 
+    VIDEO_INPUT_DIRECTORY = Path(settings.VIDEO_INPUT_DIRECTORY).resolve()
+    VIDEO_OUTPUT_DIRECTORY = Path(settings.VIDEO_OUTPUT_DIRECTORY).resolve()
+    DATA_OUTPUT_DIRECTORY = Path(settings.DATA_OUTPUT_DIRECTORY).resolve()
+
+    while True:
+        files = os.listdir(settings.VIDEO_INPUT_DIRECTORY)
+        if files:
+            file = Path(VIDEO_INPUT_DIRECTORY / files[0])
+            result = process(str(file), detector)
+            if result:
+                with open(DATA_OUTPUT_DIRECTORY / (file.stem + ".json"), "w") as output:
+                    output.write(json.dumps(result, indent=4))
+                file.rename(VIDEO_OUTPUT_DIRECTORY / file.name)
+            else:
+                print("Some error occurred")
+
+        time.sleep(1)
+
+
+def process(video, detector: Detector):
     # Start capture
-    cap = cv2.VideoCapture(settings.VIDEO)
+    cap = cv2.VideoCapture(video)
     if not cap.isOpened():
         logger.error(
             "Invalid video source %s",
-            settings.VIDEO,
+            video,
             extra={
                 "meta": {"label": "INVALID_VIDEO_SOURCE"},
             },
@@ -86,8 +106,6 @@ def main():
         cv2.imshow("Debug", cv2.resize(frame, settings.DEBUG_WINDOW_SIZE))
 
     # Debug render info
-    font = cv2.FONT_HERSHEY_DUPLEX
-    line_type = cv2.LINE_AA
     hud_color = (0, 255, 0)
 
     # Process video
@@ -125,8 +143,6 @@ def main():
                         blob.update(box)
 
             frame_count += 1
-            if frame_count >= 50:
-                break
 
             logger.info(
                 "Frame processed",
@@ -150,11 +166,11 @@ def main():
                         frame,
                         object_label,
                         (x, y - 5),
-                        font,
+                        cv2.FONT_HERSHEY_DUPLEX,
                         1,
                         hud_color,
                         2,
-                        line_type,
+                        cv2.LINE_AA,
                     )
                 cv2.imshow("Debug", cv2.resize(frame, settings.DEBUG_WINDOW_SIZE))
 
@@ -180,27 +196,26 @@ def main():
         )
 
         # Save data
-        quarter_1 = 0
-        quarter_2 = 0
-        quarter_3 = 0
-        quarter_4 = 0
+        vectors = []
+        counts = {
+            "quarter_1": 0,
+            "quarter_2": 0,
+            "quarter_3": 0,
+            "quarter_4": 0,
+        }
         for blob in blobs:
-            print(blob.position_first_detected, blob.centroid, sep=",")
-            x, y = blob.centroid
+            vectors.append(f"{blob.position_first_detected},{blob.centroid}")
+            x, y = blob.position_first_detected
             left = x < f_width / 2
             top = y < f_height / 2
             if left and top:
-                quarter_1 += 1
+                counts["quarter_1"] += 1
             elif top:
-                quarter_2 += 1
+                counts["quarter_2"] += 1
             elif left:
-                quarter_3 += 1
+                counts["quarter_3"] += 1
             else:
-                quarter_4 += 1
-        print(f"Quarter 1: {quarter_1}")
-        print(f"Quarter 2: {quarter_2}")
-        print(f"Quarter 3: {quarter_3}")
-        print(f"Quarter 4: {quarter_4}")
+                counts["quarter_4"] += 1
 
         # Render final result
         if not settings.HEADLESS:
@@ -212,6 +227,8 @@ def main():
             cv2.imshow("Debug", cv2.resize(frame, settings.DEBUG_WINDOW_SIZE))
             cv2.waitKey()
             cv2.destroyAllWindows()
+
+        return {"vectors": vectors, "counts": counts}
 
 
 if __name__ == "__main__":
