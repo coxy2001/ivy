@@ -1,3 +1,4 @@
+import os
 import cv2
 from datetime import datetime
 import settings
@@ -27,7 +28,7 @@ def main():
 
         # initialize video object to record counting
         timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        output_path = f"{settings.VIDEO_INPUT_DIRECTORY}{timestamp}.mp4"
+        output_path = f"{settings.VIDEO_WRITING_DIRECTORY}{timestamp}.mp4"
         f_height, f_width, _ = frame.shape
         output_video = cv2.VideoWriter(
             output_path,
@@ -55,6 +56,10 @@ def main():
         # When everything done, release the video capture object
         cap.release()
         output_video.release()
+
+        # Move completed recording to input directory
+        new_output_path = f"{settings.VIDEO_INPUT_DIRECTORY}{timestamp}.mp4"
+        os.rename(output_path, new_output_path)
 
         time.sleep(SLEEP)
 
