@@ -13,10 +13,11 @@ from detectors import Detector
 from detectors.yolo import DarknetYOLODetector
 from detectors.yolov8 import UltralyticsYOLODetector
 from pathlib import Path
+from random import random
 from util.blob import Blob
 from util.debugger import mouse_callback
-from util.logger import init_logger, get_logger
 from util.image import take_screenshot
+from util.logger import init_logger, get_logger
 
 
 init_logger()
@@ -73,7 +74,10 @@ def main():
             if result:
                 with open(DATA_OUTPUT_DIRECTORY / (file.stem + ".json"), "w") as output:
                     output.write(json.dumps(result, indent=4))
-                file.rename(VIDEO_OUTPUT_DIRECTORY / file.name)
+                if random() > 0.99:
+                    file.rename(VIDEO_OUTPUT_DIRECTORY / file.name)
+                else:
+                    file.unlink()
             else:
                 print("Some error occurred")
 
