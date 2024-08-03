@@ -13,6 +13,7 @@ class Blob:
         self.type_confidence = _confidence
         self.tracker: cv2.TrackerKCF = _tracker
         self.id = uuid.uuid4().hex
+        self.pid = ""
         self.centroid = self.get_centroid()
         self.area = self.get_area()
         self.num_consecutive_tracking_failures = 0
@@ -97,9 +98,9 @@ class Blob:
         epsilon = 1e-5  # small value to prevent division by zero
         return overlap_area / (smaller_area + epsilon)
 
-    def get_box_image(self, frame):
+    def get_box_image(self, frame, padding=10):
         """
         Fetches the image of the area covered by a bounding box with a 10 pixel padding
         """
         x, y, w, h = list(map(int, self.bounding_box))
-        return frame[y - 10 : y + h + 10, x - 10 : x + w + 10]
+        return frame[y - padding : y + h + padding, x - padding : x + w + padding]
